@@ -69,40 +69,43 @@ public class XposedMod implements IXposedHookLoadPackage,
 	}
 
 	private XC_MethodReplacement getMethodReplacement() {
-		switch (Build.HOST) {
-			case "cyanogenmod":
-				return new XC_MethodReplacement() {
-					@Override
-					protected Object replaceHookedMethod(
-							MethodHookParam methodHookParam) throws Throwable {
-						final boolean quickbootEnabled = Settings.System
-								.getInt(mContext.getContentResolver(),
-										"enable_quickboot", 0) == 1;
-						// go to quickboot mode if enabled
-						if (quickbootEnabled) {
-							// TODO: is working?
-							XposedHelpers.callMethod(
-									methodHookParam.thisObject,
-									"startQuickBoot");
-							return null;
-						}
+        String display = Build.DISPLAY;
 
-						showShutdownDialog();
-						return null;
-					}
-				};
-			default:
-				return new XC_MethodReplacement() {
-					@Override
-					protected Object replaceHookedMethod(
-							MethodHookParam methodHookParam) throws Throwable {
-						XposedHelpers.callMethod(mWindowManagerFuncs,
-								"shutdown", true);
-						return null;
-					}
-				};
-		}
-	}
+        if (display.contains("cm")) {
+            //CM BASED ROM
+            return new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(
+                        MethodHookParam methodHookParam) throws Throwable {
+                    final boolean quickbootEnabled = Settings.System
+                            .getInt(mContext.getContentResolver(),
+                                    "enable_quickboot", 0) == 1;
+                    // go to quickboot mode if enabled
+                    if (quickbootEnabled) {
+                        // TODO: is working?
+                        XposedHelpers.callMethod(
+                                methodHookParam.thisObject,
+                                "startQuickBoot");
+                        return null;
+                    }
+
+                    showShutdownDialog();
+                    return null;
+                }
+            };
+        } else {
+            // AOSP BASED ROM
+            return new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(
+                        MethodHookParam methodHookParam) throws Throwable {
+                    XposedHelpers.callMethod(mWindowManagerFuncs,
+                            "shutdown", true);
+                    return null;
+                }
+            };
+        }
+    }
 
 	private void showShutdownDialog()
 			throws PackageManager.NameNotFoundException {
