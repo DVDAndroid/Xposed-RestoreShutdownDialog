@@ -38,11 +38,6 @@ public class XposedMod
 				.getString(r.getIdentifier("power_off", "string", "android"));
 		shutdownConfirmString = r.getString(
 				r.getIdentifier("shutdown_confirm", "string", "android"));
-
-		CLASS_GLOBAL_ACTIONS = Build.VERSION.SDK_INT >= 23
-				? "com.android.server.policy.GlobalActions"
-				: "com.android.internal.policy.impl.GlobalActions";
-		CLASS_GLOBAL_POWER_ACTIONS = CLASS_GLOBAL_ACTIONS + ".PowerAction";
 	}
 
 	@Override
@@ -50,6 +45,11 @@ public class XposedMod
 			final XC_LoadPackage.LoadPackageParam lpparam) {
 		if (!(lpparam.packageName.equals("android")))
 			return;
+
+		CLASS_GLOBAL_ACTIONS = Build.VERSION.SDK_INT >= 23
+				? "com.android.server.policy.GlobalActions"
+				: "com.android.internal.policy.impl.GlobalActions";
+		CLASS_GLOBAL_POWER_ACTIONS = CLASS_GLOBAL_ACTIONS + ".PowerAction";
 
 		final Class<?> globalActionsClass = XposedHelpers
 				.findClass(CLASS_GLOBAL_ACTIONS, lpparam.classLoader);
