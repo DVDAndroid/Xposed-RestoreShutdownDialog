@@ -22,19 +22,17 @@ public class DetailsActivity extends Activity {
 
         details = (TextView) findViewById(R.id.infos);
 
-        StringBuilder s = new StringBuilder();
+        String s = "Hardware: " + Build.HARDWARE + "\n" +
+                "Product: " + Build.PRODUCT + "\n" +
+                "Device manufacturer: " + Build.MANUFACTURER + "\n" +
+                "Device brand: " + Build.BRAND + "\n" +
+                "Device model: " + Build.MODEL + "\n" +
+                "Device host: " + Build.HOST + "\n" +
+                "Android SDK: " + Build.VERSION.SDK_INT + "\n" +
+                "Android Release: " + Build.VERSION.RELEASE + "\n" +
+                "ROM: " + Build.DISPLAY;
 
-        s.append("Hardware: " + Build.HARDWARE + "\n");
-        s.append("Product: " + Build.PRODUCT + "\n");
-        s.append("Device manufacturer: " + Build.MANUFACTURER + "\n");
-        s.append("Device brand: " + Build.BRAND + "\n");
-        s.append("Device model: " + Build.MODEL + "\n");
-        s.append("Device host: " + Build.HOST + "\n");
-        s.append("Android SDK: " + Build.VERSION.SDK_INT + "\n");
-        s.append("Android Release: " + Build.VERSION.RELEASE + "\n");
-        s.append("ROM: " + Build.DISPLAY);
-
-        details.setText(s.toString());
+        details.setText(s);
 
     }
 
@@ -51,8 +49,7 @@ public class DetailsActivity extends Activity {
         switch (id) {
             case R.id.copy:
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("Clipboard",
-                        details.getText());
+                ClipData clip = ClipData.newPlainText("Clipboard", details.getText());
                 clipboard.setPrimaryClip(clip);
 
                 Toast.makeText(this, "Text copied", Toast.LENGTH_SHORT).show();
