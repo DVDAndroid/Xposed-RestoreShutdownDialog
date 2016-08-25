@@ -1,5 +1,7 @@
 Restore Shutdown Confirmation Dialog
 ====================================
+[![Build Status](https://travis-ci.org/DVDAndroid/Xposed-RestoreShutdownDialog.svg?branch=master)](https://travis-ci.org/DVDAndroid/Xposed-RestoreShutdownDialog)
+
 
 Xposed Module that allows to restore shutdown confirmation dialog removed from Lollipop release
 
