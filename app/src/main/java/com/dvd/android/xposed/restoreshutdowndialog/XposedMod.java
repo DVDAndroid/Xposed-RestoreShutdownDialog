@@ -20,32 +20,31 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackageResources {
 
-	public static String CLASS_GLOBAL_ACTIONS;
-	public static String CLASS_GLOBAL_POWER_ACTIONS;
-	private Context mContext;
-	private Object mWindowManagerFuncs;
-	private String powerOffString;
-	private String shutdownConfirmString;
+    public static String CLASS_GLOBAL_ACTIONS;
+    public static String CLASS_GLOBAL_POWER_ACTIONS;
+    private Context mContext;
+    private Object mWindowManagerFuncs;
+    private String powerOffString;
+    private String shutdownConfirmString;
 
-	@Override
+    @Override
     public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resParam) throws Throwable {
 
-		XResources r = resParam.res;
+        XResources r = resParam.res;
         powerOffString = r.getString(r.getIdentifier("power_off", "string", "android"));
         shutdownConfirmString = r.getString(r.getIdentifier("shutdown_confirm", "string", "android"));
     }
 
-	@Override
+    @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!(lpparam.packageName.equals("android")))
-            return;
+        if (!(lpparam.packageName.equals("android"))) return;
 
         CLASS_GLOBAL_ACTIONS = Build.VERSION.SDK_INT >= 23 ? "com.android.server.policy.GlobalActions" : "com.android.internal.policy.impl.GlobalActions";
         CLASS_GLOBAL_POWER_ACTIONS = CLASS_GLOBAL_ACTIONS + ".PowerAction";
 
         final Class<?> globalActionsClass = XposedHelpers.findClass(CLASS_GLOBAL_ACTIONS, lpparam.classLoader);
 
-		try {
+        try {
             XposedBridge.hookAllConstructors(globalActionsClass, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(final MethodHookParam param) throws Throwable {
@@ -60,15 +59,15 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
         }
     }
 
-	private XC_MethodReplacement getMethodReplacement() {
-		String display = Build.DISPLAY;
+    private XC_MethodReplacement getMethodReplacement() {
+        String display = Build.DISPLAY;
 
-		if (display.contains("cm")) {
-			// CM BASED ROM
-			return new XC_MethodReplacement() {
-				@Override
-				protected Object replaceHookedMethod(
-						MethodHookParam methodHookParam) throws Throwable {
+        if (display.contains("cm")) {
+            // CM BASED ROM
+            return new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(
+                        MethodHookParam methodHookParam) throws Throwable {
                     final boolean quickbootEnabled = Settings.System.getInt(mContext.getContentResolver(), "enable_quickboot", 0) == 1;
                     // go to quickboot mode if enabled
                     if (quickbootEnabled) {
@@ -77,21 +76,21 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
                         return null;
                     }
 
-					showShutdownDialog();
-					return null;
-				}
-			};
-		} else {
-			// AOSP BASED ROM
-			return new XC_MethodReplacement() {
-				@Override
+                    showShutdownDialog();
+                    return null;
+                }
+            };
+        } else {
+            // AOSP BASED ROM
+            return new XC_MethodReplacement() {
+                @Override
                 protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
                     XposedHelpers.callMethod(mWindowManagerFuncs, "shutdown", true);
                     return null;
                 }
             };
         }
-	}
+    }
 
     private void showShutdownDialog() throws PackageManager.NameNotFoundException {
         if (mContext == null)
@@ -99,12 +98,17 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
 
         final Context context = mContext.createPackageContext(getClass().getPackage().getName(), Context.CONTEXT_IGNORE_SECURITY);
 
-        AlertDialog sConfirmDialog = new AlertDialog.Builder(context).setTitle(powerOffString).setMessage(shutdownConfirmString).setPositiveButton(android.R.string.yes,
-                new DialogInterface.OnClickListener() {
+        AlertDialog sConfirmDialog = new AlertDialog.Builder(context)
+                .setTitle(powerOffString)
+                .setMessage(shutdownConfirmString)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         XposedHelpers.callMethod(mWindowManagerFuncs, "shutdown", false);
                     }
-                }).setNegativeButton(android.R.string.no, null).create();
+                })
+                .setNegativeButton(android.R.string.no, null)
+                .create();
+
         sConfirmDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
         sConfirmDialog.show();
     }
