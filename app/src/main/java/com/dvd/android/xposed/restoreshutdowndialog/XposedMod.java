@@ -27,6 +27,7 @@ import android.view.WindowManager;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -34,7 +35,9 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackageResources {
+import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+
+public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookInitPackageResources {
 
     public static String CLASS_GLOBAL_ACTIONS;
     public static String CLASS_GLOBAL_POWER_ACTIONS;
@@ -42,6 +45,18 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
     private Object mWindowManagerFuncs;
     private String powerOffString;
     private String shutdownConfirmString;
+
+    @Override
+    public void initZygote(StartupParam startupParam) throws Throwable {
+        if (Build.VERSION.SDK_INT > 23) { // for context.getSharedPreferences("", MODE_WORLD_READABLE) disabled from nougat.
+            findAndHookMethod("android.app.ContextImpl", null, "checkMode", int.class, new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                    return null;
+                }
+            });
+        }
+    }
 
     @Override
     public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resParam) throws Throwable {
@@ -76,7 +91,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
                 }
             });
 
-            XposedHelpers.findAndHookMethod(CLASS_GLOBAL_POWER_ACTIONS, lpparam.classLoader, "onPress", getMethodReplacement());
+            findAndHookMethod(CLASS_GLOBAL_POWER_ACTIONS, lpparam.classLoader, "onPress", getMethodReplacement());
         } catch (Throwable e) {
             XposedBridge.log(e);
         }
