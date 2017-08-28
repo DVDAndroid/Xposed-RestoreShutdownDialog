@@ -45,6 +45,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
 
     @Override
     public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resParam) throws Throwable {
+        if (!resParam.packageName.equals("android")) return;
 
         XResources r = resParam.res;
         powerOffString = r.getString(r.getIdentifier("power_off", "string", "android"));
@@ -55,7 +56,13 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookInitPackage
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
         if (!(lpparam.packageName.equals("android"))) return;
 
-        CLASS_GLOBAL_ACTIONS = Build.VERSION.SDK_INT >= 23 ? "com.android.server.policy.GlobalActions" : "com.android.internal.policy.impl.GlobalActions";
+        if (Build.VERSION.SDK_INT >= 26)
+            CLASS_GLOBAL_ACTIONS = "com.android.server.policy.LegacyGlobalActions";
+        else if (Build.VERSION.SDK_INT >= 23)
+            CLASS_GLOBAL_ACTIONS = "com.android.server.policy.GlobalActions";
+        else
+            CLASS_GLOBAL_ACTIONS = "com.android.internal.policy.impl.GlobalActions";
+
         CLASS_GLOBAL_POWER_ACTIONS = CLASS_GLOBAL_ACTIONS + ".PowerAction";
 
         final Class<?> globalActionsClass = XposedHelpers.findClass(CLASS_GLOBAL_ACTIONS, lpparam.classLoader);
